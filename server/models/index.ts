@@ -15,3 +15,5 @@ export * from "./EventLog";
 export * from "./WebhookSubscription";
 export * from "./WebhookReceipt";
 export * from "./AuditLog";
+export * from "./JoinRequest";
+

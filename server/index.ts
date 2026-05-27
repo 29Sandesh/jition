@@ -25,6 +25,8 @@ import { dashboardRouter } from "./routes/dashboard";
 import { chatRouter } from "./routes/chat";
 import { webhooksRouter } from "./routes/webhooks";
 import { chaosRouter } from "./routes/chaos";
+import { companiesRouter } from "./routes/companies";
+
 
 async function startServer() {
   const app = express();
@@ -128,6 +130,8 @@ async function startServer() {
   app.use("/api/chat", chatRouter);
   app.use("/api/webhooks", webhooksRouter);
   app.use("/api/chaos", chaosRouter);
+  app.use("/api/companies", companiesRouter);
+
 
   // 3. Parallel GraphQL Endpoint
   const { requireAuth } = await import("./middleware/auth");

@@ -352,8 +352,19 @@ export function SettingsPage() {
         .catch(console.error);
 
       if (user?.role === "Lead" || user?.role === "Owner" || user?.role === "Admin") {
-        // Mock requests to prevent crashes
-        setRequests([]);
+        fetch("/api/companies/requests", { 
+          headers: { 
+            "x-user-id": user.id, 
+            "x-organisation-id": orgId 
+          }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data)) {
+              setRequests(data);
+            }
+          })
+          .catch(console.error);
       }
         
       fetch("/api/organisations/members", { headers: { "x-user-id": user.id, "x-company-id": user.companyId || "" }})
