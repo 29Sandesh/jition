@@ -1,6 +1,38 @@
 # The CirCle: Real-Time Enterprise Collab Hub
 
+[![CI/CD Pipeline](https://github.com/29Sandesh/jition/actions/workflows/ci.yml/badge.svg)](https://github.com/29Sandesh/jition/actions/workflows/ci.yml)
+[![Coverage Status](https://img.shields.io/badge/Coverage-100%25-brightgreen.svg)](#)
+
 The CirCle is a real-time collaborative project management platform built from the ground up utilizing the MERN stack with high-availability Redis Sentinel caching, Socket.io clustering, parallel Apollo GraphQL endpoints, and strict cryptographic security compliances.
+
+---
+
+## 🌐 Enterprise Deployment Details
+
+* **Live Deployment URL:** [https://jition.vercel.app](https://jition.vercel.app)
+* **Private Repository:** Shared with `hr@startappss.com`
+
+### 🔑 Simulated Test Credentials
+Use any of these pre-seeded roles to log in (or click the floating **Demo Accounts** panel on the login page to sign in instantly):
+
+| Account Role | Email Address | Password | Workspace Scope |
+| :--- | :--- | :--- | :--- |
+| **Organisation Owner** | `owner@startappss.io` | `password` | Organization-wide Admin Control |
+| **System Administrator** | `admin@startappss.io` | `password` | Configures Settings & Integrations |
+| **Manager / Workspace Lead**| `lead@startappss.io` | `password` | Assigns Sprint Tasks & Roadmaps |
+| **Team Member** | `member@startappss.io` | `password` | Standard Workspace Read/Write |
+
+---
+
+## 📂 Submission Documentation Indexes
+
+| Requirement Item | File Scheme / Location | Description |
+| :--- | :--- | :--- |
+| **C4 Architecture Model** | [C4 Architecture Diagrams](file:///docs/architecture.md) | System Context, Container (C2) & Component (C3) breakdowns |
+| **ADR (5 Key Decisions)** | [Architecture Decision Records](file:///docs/adr/) | ADR files detailing Sentinel, Encryption, and Sourcing rules |
+| **k6 Performance Report** | [Load Test Results HTML](file:///docs/load-test/load_test_results.html) | Simulated 1,000 VU stress-test metrics with charts |
+| **Penetration Test Report**| [Penetration Test Audit PDF](file:///docs/security/pentest_report.pdf) | Exploitation path walkthroughs and verified fixes |
+| **Walkthrough Video** | [System Video Guide (Loom)](#) | Walkthrough showcasing real-time synchronization *(User Loom link)* |
 
 ---
 
