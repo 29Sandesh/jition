@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useStore } from "../lib/store";
+import { useAuth } from "../lib/AuthContext";
 
 const DEFAULT_NOTIFICATIONS = [
   { id: "1", type: "mention", title: "Sarah mentioned you in Q4 Planning", time: "10 mins ago", read: false, icon: "alternate_email", color: "text-blue-600", bg: "bg-blue-100" },
@@ -10,16 +12,72 @@ const DEFAULT_NOTIFICATIONS = [
 
 export function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
+  const { selectedWsId, token } = useStore();
+  const { user } = useAuth();
 
-  const loadNotifications = () => {
+  const loadNotifications = async () => {
     try {
-      const stored = localStorage.getItem("jition-notifications");
-      if (stored) {
-        setNotifications(JSON.parse(stored));
-      } else {
-        localStorage.setItem("jition-notifications", JSON.stringify(DEFAULT_NOTIFICATIONS));
-        setNotifications(DEFAULT_NOTIFICATIONS);
+      // 1. Fetch real-time database activities
+      let dbNotifs: any[] = [];
+      if (selectedWsId) {
+        const orgId = user?.organisationId || "";
+        const headers: any = {
+          "x-workspace-id": selectedWsId,
+          "x-organisation-id": orgId,
+        };
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        
+        const res = await fetch("/api/workItems/history", { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.activities && Array.isArray(data.activities)) {
+            const readIds = localStorage.getItem("jition-read-notification-ids")
+              ? JSON.parse(localStorage.getItem("jition-read-notification-ids")!)
+              : [];
+
+            dbNotifs = data.activities.map((act: any) => ({
+              id: act.id,
+              type: act.action.includes("created") ? "task" : "system",
+              title: `${act.user} ${act.action} "${act.target}"`,
+              time: act.time,
+              read: readIds.includes(act.id),
+              icon: act.action.includes("create") || act.action.includes("add") ? "assignment" : "edit",
+              color: act.action.includes("delete") ? "text-red-600" : "text-blue-600",
+              bg: act.action.includes("delete") ? "bg-red-100" : "bg-blue-100"
+            }));
+          }
+        }
       }
+
+      // 2. Fetch locally stored manual/test notifications
+      const stored = localStorage.getItem("jition-notifications");
+      let localNotifs = stored ? JSON.parse(stored) : [];
+
+      if (!stored && dbNotifs.length === 0) {
+        // Fallback to seeding default mock notifications if completely empty
+        localStorage.setItem("jition-notifications", JSON.stringify(DEFAULT_NOTIFICATIONS));
+        localNotifs = DEFAULT_NOTIFICATIONS;
+      }
+
+      // Combine both lists (avoiding duplicates)
+      const combined = [...localNotifs];
+      dbNotifs.forEach((dbN: any) => {
+        if (!combined.some(n => n.id === dbN.id)) {
+          combined.push(dbN);
+        }
+      });
+
+      // Sort by read state (unread first) and then by ID (descending)
+      combined.sort((a, b) => {
+        if (a.read !== b.read) {
+          return a.read ? 1 : -1;
+        }
+        return b.id.localeCompare(a.id);
+      });
+
+      setNotifications(combined);
     } catch (e) {
       console.error("Failed to load notifications from local storage", e);
     }
@@ -32,21 +90,52 @@ export function NotificationsPage() {
     return () => {
       window.removeEventListener("jition-new-notification", loadNotifications);
     };
-  }, []);
+  }, [selectedWsId]);
 
   const markAllRead = () => {
-    const updated = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updated);
-    localStorage.setItem("jition-notifications", JSON.stringify(updated));
+    // 1. Mark local notifications as read
+    const stored = localStorage.getItem("jition-notifications");
+    const localNotifs = stored ? JSON.parse(stored) : [];
+    const updatedLocal = localNotifs.map((n: any) => ({ ...n, read: true }));
+    localStorage.setItem("jition-notifications", JSON.stringify(updatedLocal));
+
+    // 2. Save all DB notification IDs to read list in localStorage
+    const readIds = localStorage.getItem("jition-read-notification-ids")
+      ? JSON.parse(localStorage.getItem("jition-read-notification-ids")!)
+      : [];
+    
+    notifications.forEach((n: any) => {
+      if (!readIds.includes(n.id)) {
+        readIds.push(n.id);
+      }
+    });
+    localStorage.setItem("jition-read-notification-ids", JSON.stringify(readIds));
+
+    // 3. Dispatch event to update the header
     window.dispatchEvent(new Event("jition-new-notification"));
     toast.success("All notifications marked as read");
+    loadNotifications();
   };
 
   const markRead = (id: string | number) => {
-    const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
-    setNotifications(updated);
-    localStorage.setItem("jition-notifications", JSON.stringify(updated));
+    // 1. Mark local notification as read if it is local
+    const stored = localStorage.getItem("jition-notifications");
+    const localNotifs = stored ? JSON.parse(stored) : [];
+    const updatedLocal = localNotifs.map((n: any) => n.id === id ? { ...n, read: true } : n);
+    localStorage.setItem("jition-notifications", JSON.stringify(updatedLocal));
+
+    // 2. Add ID to read list in localStorage
+    const readIds = localStorage.getItem("jition-read-notification-ids")
+      ? JSON.parse(localStorage.getItem("jition-read-notification-ids")!)
+      : [];
+    if (!readIds.includes(id)) {
+      readIds.push(id);
+    }
+    localStorage.setItem("jition-read-notification-ids", JSON.stringify(readIds));
+
+    // 3. Dispatch event to update the header
     window.dispatchEvent(new Event("jition-new-notification"));
+    loadNotifications();
   };
 
   const triggerTestNotification = () => {
@@ -69,9 +158,9 @@ export function NotificationsPage() {
       bg: "bg-primary/10"
     };
 
-    const updated = [newNotif, ...notifications];
-    setNotifications(updated);
-    localStorage.setItem("jition-notifications", JSON.stringify(updated));
+    const stored = localStorage.getItem("jition-notifications");
+    const localNotifs = stored ? JSON.parse(stored) : [];
+    localStorage.setItem("jition-notifications", JSON.stringify([newNotif, ...localNotifs]));
     window.dispatchEvent(new Event("jition-new-notification"));
 
     toast.success("Test notification triggered with chime!");

@@ -4,6 +4,14 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { useSettings } from "../lib/SettingsContext";
 import { cn } from "../lib/utils";
+import { useStore } from "../lib/store";
+
+const DEFAULT_NOTIFICATIONS = [
+  { id: "1", type: "mention", title: "Sarah mentioned you in Q4 Planning", time: "10 mins ago", read: false, icon: "alternate_email", color: "text-blue-600", bg: "bg-blue-100" },
+  { id: "2", type: "task", title: "You were assigned to Design System Review", time: "2 hours ago", read: false, icon: "assignment", color: "text-purple-600", bg: "bg-purple-100" },
+  { id: "3", type: "system", title: "Project 'Kinetic Alpha' was successfully deployed", time: "1 day ago", read: true, icon: "rocket_launch", color: "text-green-600", bg: "bg-green-100" },
+  { id: "4", type: "comment", title: "New comment on API Architecture doc", time: "2 days ago", read: true, icon: "chat_bubble", color: "text-orange-600", bg: "bg-orange-100" },
+];
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -12,6 +20,7 @@ interface HeaderProps {
 export function Header({ onMenuClick }: HeaderProps) {
   const { user, company, logout } = useAuth();
   const { workspaceName } = useSettings();
+  const { selectedWsId, token } = useStore();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -35,11 +44,49 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    const updateUnreadCount = () => {
+    const updateUnreadCount = async () => {
       try {
+        let dbNotifs: any[] = [];
+        if (selectedWsId) {
+          const orgId = user?.organisationId || "";
+          const headers: any = {
+            "x-workspace-id": selectedWsId,
+            "x-organisation-id": orgId,
+          };
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+          const res = await fetch("/api/workItems/history", { headers });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.activities && Array.isArray(data.activities)) {
+              const readIds = localStorage.getItem("jition-read-notification-ids")
+                ? JSON.parse(localStorage.getItem("jition-read-notification-ids")!)
+                : [];
+              dbNotifs = data.activities.map((act: any) => ({
+                id: act.id,
+                read: readIds.includes(act.id),
+              }));
+            }
+          }
+        }
+
         const stored = localStorage.getItem("jition-notifications");
-        const notifs = stored ? JSON.parse(stored) : [];
-        const unread = notifs.filter((n: any) => !n.read).length;
+        let localNotifs = stored ? JSON.parse(stored) : [];
+
+        if (!stored && dbNotifs.length === 0) {
+          localNotifs = DEFAULT_NOTIFICATIONS;
+        }
+
+        // Combine both lists (avoiding duplicates)
+        const combined = [...localNotifs];
+        dbNotifs.forEach((dbN: any) => {
+          if (!combined.some(n => n.id === dbN.id)) {
+            combined.push(dbN);
+          }
+        });
+
+        const unread = combined.filter((n: any) => !n.read).length;
         setUnreadCount(unread);
       } catch (e) {
         console.error("Failed to parse notifications in header", e);
@@ -51,7 +98,7 @@ export function Header({ onMenuClick }: HeaderProps) {
     return () => {
       window.removeEventListener("jition-new-notification", updateUnreadCount);
     };
-  }, []);
+  }, [selectedWsId, token, user]);
 
   // Generate dynamic breadcrumb segments based on path
   const pathSegments = location.pathname.split("/").filter(Boolean);

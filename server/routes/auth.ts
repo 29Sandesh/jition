@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { UserModel, OrganisationModel, writeAuditLog } from "../models";
+import { UserModel, OrganisationModel, WorkspaceModel, WorkspaceMemberModel, writeAuditLog } from "../models";
 import { generateAccessToken } from "../auth/jwt";
 import { generateRefreshToken, verifyAndRotateRefreshToken } from "../auth/refreshToken";
 import passport from "passport";
@@ -103,7 +103,7 @@ authRouter.post("/login", async (req, res) => {
 // Signup endpoint
 authRouter.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, companyName } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ error: "All fields are required" });
     }
@@ -114,17 +114,44 @@ authRouter.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Email already registered" });
     }
 
+    let organisationId = null;
+    if (companyName) {
+      const org = await OrganisationModel.findOne({ name: new RegExp(`^${companyName}$`, "i") });
+      if (org) {
+        organisationId = org._id;
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await UserModel.create({
       name,
       email,
       emailHash,
       password: hashedPassword,
-      role: "User",
-      organisationId: null
+      role: organisationId ? "Member" : "User",
+      organisationId
     });
 
     const userIdStr = newUser._id.toString();
+
+    // Auto-join workspaces under this organisation
+    if (organisationId) {
+      await WorkspaceModel.updateMany(
+        { organisationId },
+        { $addToSet: { memberIds: userIdStr } }
+      );
+      
+      const workspaces = await WorkspaceModel.find({ organisationId }).lean();
+      for (const ws of workspaces) {
+        await WorkspaceMemberModel.create({
+          workspaceId: ws._id,
+          userId: newUser._id,
+          role: "Member",
+          organisationId
+        }).catch(() => {});
+      }
+    }
+
     const accessToken = generateAccessToken(userIdStr);
     const { token: refreshToken } = await generateRefreshToken(userIdStr);
     
@@ -141,6 +168,7 @@ authRouter.post("/register", async (req, res) => {
 
     res.json({ userId: userIdStr, accessToken });
   } catch (error) {
+    console.error("Registration error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

@@ -17,6 +17,18 @@ export function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [showDemoInfo, setShowDemoInfo] = useState(false);
+  const [inviteCompany, setInviteCompany] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("register") === "true") {
+      setIsSignUp(true);
+    }
+    const companyParam = params.get("company");
+    if (companyParam) {
+      setInviteCompany(companyParam);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -42,7 +54,7 @@ export function AuthPage() {
     setFormLoading(true);
     let success = false;
     if (isSignUp) {
-      success = await signup(name.trim(), email.trim(), password);
+      success = await signup(name.trim(), email.trim(), password, inviteCompany || undefined);
     } else {
       success = await login(email.trim(), password);
     }
