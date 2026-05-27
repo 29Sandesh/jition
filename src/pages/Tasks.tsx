@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../lib/AuthContext";
 import { useTasks, useUpdateTaskStatus, bindSocketToQueryCache } from "../lib/query";
 import { io } from "socket.io-client";
+import { useStore } from "../lib/store";
 
 interface Task {
   _id: string;
@@ -57,8 +58,14 @@ export function Tasks() {
   const [epics, setEpics] = useState<any[]>([]);
   const [stories, setStories] = useState<any[]>([]);
 
-  const [selectedWsId, setSelectedWsId] = useState("");
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const { 
+    selectedWsId: storeWsId, 
+    setSelectedWsId, 
+    selectedProjectId: storeProjectId, 
+    setSelectedProjectId 
+  } = useStore();
+  const selectedWsId = storeWsId || "";
+  const selectedProjectId = storeProjectId || "";
   const [selectedEpicId, setSelectedEpicId] = useState("");
   const [selectedStoryId, setSelectedStoryId] = useState("");
 
@@ -109,12 +116,15 @@ export function Tasks() {
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             setWorkspaces(data);
-            setSelectedWsId(data[0]._id);
+            const currentWsIsValid = data.some(ws => ws._id === storeWsId);
+            if (!storeWsId || !currentWsIsValid) {
+              setSelectedWsId(data[0]._id);
+            }
           }
         })
         .catch(console.error);
     }
-  }, [orgId]);
+  }, [orgId, storeWsId]);
 
   // Load Projects when workspace changes
   useEffect(() => {
