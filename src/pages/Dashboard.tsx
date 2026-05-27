@@ -85,11 +85,13 @@ export function Dashboard() {
     };
 
     Promise.all([
-      fetch("/api/workItems", { headers: authHeaders }).then(r => r.json()).then(data => data.items || []),
+      fetch("/api/workItems", { headers: authHeaders }).then(r => r.json()).then(data => data.data || data.items || []),
       fetch("/api/dashboard/summary", { headers: authHeaders }).then(r => r.json()).catch(() => null),
       fetch("/api/organisations/members", { headers: authHeaders }).then(r => r.json()).catch(() => []),
     ]).then(([tasksData, summaryData, membersData]) => {
-      setTasks(Array.isArray(tasksData) ? tasksData : []);
+      const rawTasks = Array.isArray(tasksData) ? tasksData : [];
+      const mappedTasks = rawTasks.map((t: any) => ({ ...t, id: t._id || t.id }));
+      setTasks(mappedTasks);
       setSummary(summaryData);
       setMembers(Array.isArray(membersData) ? membersData : []);
     }).catch(err => console.error(err));
