@@ -4,6 +4,7 @@ import { AreaChart, Area, PieChart, Pie, Cell, ResponsiveContainer, Tooltip as R
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "../lib/AuthContext";
+import { useStore } from "../lib/store";
 
 interface Task {
   id: string;
@@ -72,6 +73,7 @@ function KPICard({ title, value, trend, trendUp, sparklineData, sparklineColor }
 
 export function Dashboard() {
   const { organisation, user } = useAuth();
+  const { selectedWsId, setSelectedWsId } = useStore();
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [summary, setSummary] = useState<SummaryData | null>(null);
@@ -79,23 +81,63 @@ export function Dashboard() {
   const [timeRange, setTimeRange] = useState("Last 30 Days");
 
   useEffect(() => {
-    const authHeaders = {
-      "x-workspace-id": "default-workspace-id", // Hardcoded for now until workspace selector is built
-      "x-organisation-id": organisation?.id || user?.organisationId || ""
+    if (!organisation?.id && !user?.organisationId) return;
+
+    const orgId = organisation?.id || user?.organisationId || "";
+    const baseHeaders = {
+      "x-organisation-id": orgId
     };
 
-    Promise.all([
-      fetch("/api/workItems", { headers: authHeaders }).then(r => r.json()).then(data => data.data || data.items || []),
-      fetch("/api/dashboard/summary", { headers: authHeaders }).then(r => r.json()).catch(() => null),
-      fetch("/api/organisations/members", { headers: authHeaders }).then(r => r.json()).catch(() => []),
-    ]).then(([tasksData, summaryData, membersData]) => {
-      const rawTasks = Array.isArray(tasksData) ? tasksData : [];
-      const mappedTasks = rawTasks.map((t: any) => ({ ...t, id: t._id || t.id }));
-      setTasks(mappedTasks);
-      setSummary(summaryData);
-      setMembers(Array.isArray(membersData) ? membersData : []);
-    }).catch(err => console.error(err));
-  }, []);
+    const loadDashboardData = async (wsId: string) => {
+      const authHeaders = {
+        ...baseHeaders,
+        "x-workspace-id": wsId
+      };
+
+      try {
+        const [tasksData, summaryData, membersData] = await Promise.all([
+          fetch("/api/workItems", { headers: authHeaders }).then(r => r.json()).then(data => data.data || data.items || []),
+          fetch("/api/dashboard/summary", { headers: authHeaders }).then(r => r.json()).catch(() => null),
+          fetch("/api/organisations/members", { headers: authHeaders }).then(r => r.json()).catch(() => []),
+        ]);
+
+        const rawTasks = Array.isArray(tasksData) ? tasksData : [];
+        // Filter out subtasks from dashboard lists to match Tasks page logic
+        const mappedTasks = rawTasks
+          .filter((t: any) => !t.parentTaskId)
+          .map((t: any) => ({ ...t, id: t._id || t.id }));
+
+        setTasks(mappedTasks);
+        setSummary(summaryData);
+        setMembers(Array.isArray(membersData) ? membersData : []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const initWorkspace = async () => {
+      try {
+        const res = await fetch("/api/workspaces", { headers: baseHeaders });
+        const workspaces = await res.json();
+        if (Array.isArray(workspaces) && workspaces.length > 0) {
+          const currentWsIsValid = workspaces.some(ws => ws._id === selectedWsId);
+          const activeWsId = currentWsIsValid ? selectedWsId! : workspaces[0]._id;
+          if (activeWsId !== selectedWsId) {
+            setSelectedWsId(activeWsId);
+          }
+          await loadDashboardData(activeWsId);
+        }
+      } catch (err) {
+        console.error("Failed to load workspaces for dashboard", err);
+      }
+    };
+
+    if (selectedWsId) {
+      loadDashboardData(selectedWsId);
+    } else {
+      initWorkspace();
+    }
+  }, [organisation?.id, user?.organisationId, selectedWsId]);
 
   if (!summary || (summary as any).error) {
     return (

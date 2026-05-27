@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "../lib/AuthContext";
 import { toast } from "sonner";
+import { useStore } from "../lib/store";
 
 interface Task {
   _id: string;
@@ -19,7 +20,8 @@ export function TimelinePage() {
   const { user, organisation: company } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [workspaces, setWorkspaces] = useState<any[]>([]);
-  const [selectedWsId, setSelectedWsId] = useState("");
+  const { selectedWsId: storeWsId, setSelectedWsId } = useStore();
+  const selectedWsId = storeWsId || "";
   
   // Drag state
   const [dragging, setDragging] = useState<{
@@ -47,12 +49,15 @@ export function TimelinePage() {
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             setWorkspaces(data);
-            setSelectedWsId(data[0]._id);
+            const currentWsIsValid = data.some(ws => ws._id === storeWsId);
+            if (!storeWsId || !currentWsIsValid) {
+              setSelectedWsId(data[0]._id);
+            }
           }
         })
         .catch(console.error);
     }
-  }, [orgId]);
+  }, [orgId, storeWsId]);
 
   // 2. Fetch tasks for selected workspace
   const fetchTasks = async () => {

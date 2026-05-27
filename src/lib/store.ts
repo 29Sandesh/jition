@@ -44,11 +44,13 @@ export const useStore = create<StoreState>()(
       }),
       {
         name: "jition-store",
-        // Selective Hydration: Only persist user authentication details and UI theme
+        // Selective Hydration: Persist user authentication, UI theme, and active workspace/project
         partialize: (state) => ({
           user: state.user,
           token: state.token,
           theme: state.theme,
+          selectedWsId: state.selectedWsId,
+          selectedProjectId: state.selectedProjectId,
         }),
       }
     )

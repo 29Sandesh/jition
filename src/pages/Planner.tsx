@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { addDays, startOfWeek, format, differenceInDays, subDays, isToday, parseISO } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../lib/AuthContext";
+import { useStore } from "../lib/store";
 
 interface Task {
   id: string;
@@ -26,6 +27,7 @@ const ROW_HEIGHT = 80;
 
 export function Planner() {
   const { user, organisation } = useAuth();
+  const { selectedWsId, setSelectedWsId } = useStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,67 +42,141 @@ export function Planner() {
   useEffect(() => {
     if (!user) return;
 
-    const authHeaders = {
-      "x-workspace-id": "default-workspace-id",
-      "x-organisation-id": organisation?.id || user?.organisationId || "",
+    const orgId = organisation?.id || user?.organisationId || "";
+    const baseHeaders = {
+      "x-organisation-id": orgId,
       "x-user-id": user?.id || "",
-      "x-company-id": organisation?.id || user?.organisationId || ""
+      "x-company-id": orgId
     };
 
-    Promise.all([
-      fetch("/api/workItems", { headers: authHeaders }).then((res) => res.json()),
-      fetch("/api/organisations/members", { headers: authHeaders }).then((res) => res.json())
-    ])
-      .then(([tasksData, membersData]) => {
-        const members = Array.isArray(membersData) ? membersData : [];
+    const loadPlannerData = async (wsId: string) => {
+      const authHeaders = {
+        ...baseHeaders,
+        "x-workspace-id": wsId
+      };
+
+      try {
+        const [tasksData, membersData] = await Promise.all([
+          fetch("/api/workItems", { headers: authHeaders }).then((res) => res.json()),
+          fetch(`/api/workspaces/${wsId}/members`, { headers: authHeaders }).then((res) => res.json())
+        ]);
+
+        const rawMembers = Array.isArray(membersData) ? membersData : [];
+        const members = rawMembers.map((m: any) => ({
+          id: m._id || m.id,
+          name: m.name,
+          avatar: m.avatar,
+          role: m.workspaceRole || m.orgRole || m.role || "Member"
+        }));
         setTeamMembers([...members, { id: "unassigned", name: "Unassigned", role: "Team Member" }]);
 
         const tasksArray = Array.isArray(tasksData) ? tasksData : (tasksData.items || tasksData.data || []);
-        const augmented = tasksArray.map((t: any, i: number) => {
-          let parsedEndDate = t.dueDate ? parseISO(t.dueDate) : null;
-          let endDate = parsedEndDate && !isNaN(parsedEndDate.getTime()) 
-            ? parsedEndDate 
-            : addDays(timelineStart, (i * 3) % 15 + 2);
+        // Exclude sub-tasks from the planner roadmap
+        const augmented = tasksArray
+          .filter((t: any) => !t.parentTaskId)
+          .map((t: any, i: number) => {
+            let parsedEndDate = t.dueDate ? parseISO(t.dueDate) : null;
+            let endDate = parsedEndDate && !isNaN(parsedEndDate.getTime()) 
+              ? parsedEndDate 
+              : addDays(timelineStart, (i * 3) % 15 + 2);
 
-          let parsedStartDate = t.startDate ? parseISO(t.startDate as any) : null;
-          let startDate = parsedStartDate && !isNaN(parsedStartDate.getTime()) 
-            ? parsedStartDate 
-            : subDays(endDate, 2);
+            let parsedStartDate = t.startDate ? parseISO(t.startDate as any) : null;
+            let startDate = parsedStartDate && !isNaN(parsedStartDate.getTime()) 
+              ? parsedStartDate 
+              : subDays(endDate, 2);
 
-          return {
-            ...t,
-            id: t._id || t.id,
-            startDate,
-            endDate,
-            description: t.description || "No description provided. Click to add context, sub-tasks, or notes for this item.",
-            labels: t.labels || (i % 2 === 0 ? ["Feature", "Frontend"] : ["Backend"]),
-            estimate: t.estimate || ((i % 5) + 1)
-          };
-        });
+            return {
+              ...t,
+              id: t._id || t.id,
+              startDate,
+              endDate,
+              description: t.description || "No description provided. Click to add context, sub-tasks, or notes for this item.",
+              labels: t.labels || (i % 2 === 0 ? ["Feature", "Frontend"] : ["Backend"]),
+              estimate: t.estimate || ((i % 5) + 1)
+            };
+          });
         setTasks(augmented);
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Failed to fetch planner data", err);
         setLoading(false);
-      });
-  }, [user, organisation, timelineStart]);
+      }
+    };
 
-  const handleTaskDragEnd = (task: Task, offset: number) => {
+    const initWorkspace = async () => {
+      try {
+        const res = await fetch("/api/workspaces", { headers: baseHeaders });
+        const workspaces = await res.json();
+        if (Array.isArray(workspaces) && workspaces.length > 0) {
+          const currentWsIsValid = workspaces.some(ws => ws._id === selectedWsId);
+          const activeWsId = currentWsIsValid ? selectedWsId! : workspaces[0]._id;
+          if (activeWsId !== selectedWsId) {
+            setSelectedWsId(activeWsId);
+          }
+          await loadPlannerData(activeWsId);
+        }
+      } catch (err) {
+        console.error("Failed to load workspaces for planner", err);
+        setLoading(false);
+      }
+    };
+
+    if (selectedWsId) {
+      loadPlannerData(selectedWsId);
+    } else {
+      initWorkspace();
+    }
+  }, [user, organisation?.id, user?.organisationId, selectedWsId]);
+
+  const handleTaskDragEnd = async (task: Task, offset: number) => {
     const dayOffset = Math.round(offset / CELL_WIDTH);
     if (dayOffset === 0) return;
     
+    const newStartDate = task.startDate ? addDays(task.startDate, dayOffset) : undefined;
+    const newEndDate = task.endDate ? addDays(task.endDate, dayOffset) : undefined;
+
+    // Optimistically update local state
     setTasks(prev => prev.map(t => {
       if (t.id === task.id && t.startDate && t.endDate) {
         return {
           ...t,
-          startDate: addDays(t.startDate, dayOffset),
-          endDate: addDays(t.endDate, dayOffset)
+          startDate: newStartDate,
+          endDate: newEndDate
         };
       }
       return t;
     }));
-    toast(`Rescheduled ${task.title}`);
+
+    try {
+      const authHeaders = {
+        "x-workspace-id": selectedWsId || "default-workspace-id",
+        "x-organisation-id": organisation?.id || user?.organisationId || "",
+        "x-user-id": user?.id || "",
+        "x-company-id": organisation?.id || user?.organisationId || "",
+        "Content-Type": "application/json"
+      };
+
+      const res = await fetch(`/api/workItems/${task.id}`, {
+        method: "PUT",
+        headers: authHeaders,
+        body: JSON.stringify({
+          startDate: newStartDate?.toISOString(),
+          dueDate: newEndDate?.toISOString()
+        })
+      });
+
+      if (!res.ok) {
+        toast.error("Failed to save rescheduled task.");
+        // Rollback state
+        setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+      } else {
+        toast.success(`Rescheduled ${task.title}`);
+      }
+    } catch (err) {
+      toast.error("Failed to save rescheduled task.");
+      // Rollback state
+      setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+    }
   };
 
   const handleGridDoubleClick = (memberId: string, day: Date) => {
