@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth";
 import { OrganisationModel, UserModel, JoinRequestModel, WorkspaceModel, WorkspaceMemberModel } from "../models";
+import mongoose from "mongoose";
 
 export const companiesRouter = Router();
 
@@ -126,7 +127,7 @@ companiesRouter.post("/requests/:id/approve", requireAuth, async (req, res) => {
     }
 
     // Set user's organisation and change role to Member
-    requestUser.organisationId = orgId;
+    requestUser.organisationId = new mongoose.Types.ObjectId(orgId);
     requestUser.role = "Member";
     await requestUser.save();
 
