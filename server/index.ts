@@ -110,6 +110,11 @@ async function startServer() {
     });
   }
 
+  // Health check
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", message: "The CirCle API is fully operational" });
+  });
+
   // API Routes
   app.use("/api/auth", authRouter);
   app.use("/api/organisations", organisationsRouter);
@@ -152,10 +157,7 @@ async function startServer() {
     }
   });
 
-  // Health check
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", message: "The CirCle API is fully operational" });
-  });
+
 
   // Vite dev or production static serving
   if (process.env.NODE_ENV !== "production") {
