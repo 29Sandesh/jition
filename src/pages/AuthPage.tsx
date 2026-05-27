@@ -188,7 +188,7 @@ export function AuthPage() {
   if (password.length > 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) passwordStrength++;
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row bg-white dark:bg-background">
+    <main className="min-h-screen w-full flex flex-col md:flex-row bg-white dark:bg-background">
       
       {/* LEFT PANEL - Dark Hero (Hidden on very small screens, 40% width on md+) */}
       <div className="hidden md:flex w-[40%] bg-gradient-to-br from-[#0f0c29] via-[#201a47] to-[#302b63] p-12 flex-col justify-between relative overflow-hidden">
@@ -258,7 +258,7 @@ export function AuthPage() {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
           className="relative z-10 flex -space-x-4 mt-12"
         >
-          {["bg-blue-500", "bg-purple-500", "bg-pink-500", "bg-green-500"].map((color, i) => (
+          {["bg-blue-700", "bg-purple-700", "bg-pink-700", "bg-green-700"].map((color, i) => (
             <div key={i} className={`w-12 h-12 rounded-full border-2 border-[#1a153a] ${color} flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
               {['SA', 'RS', 'AM', 'PN'][i]}
             </div>
@@ -403,14 +403,14 @@ export function AuthPage() {
                 href="/api/auth/google"
                 className="flex-1 py-3.5 border border-outline-variant/50 rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container-lowest hover:border-primary/50 transition-all font-bold text-label-md text-on-surface"
               >
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" role="presentation" className="w-5 h-5" />
                 Google
               </a>
               <a 
                 href="/api/auth/github"
                 className="flex-1 py-3.5 border border-outline-variant/50 rounded-xl flex items-center justify-center gap-2 hover:bg-surface-container-lowest hover:border-primary/50 transition-all font-bold text-label-md text-on-surface"
               >
-                <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" className="w-5 h-5" />
+                <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" role="presentation" className="w-5 h-5" />
                 GitHub
               </a>
             </div>
@@ -556,6 +556,6 @@ export function AuthPage() {
           </>
         )}
       </AnimatePresence>
-    </div>
+    </main>
   );
 }
