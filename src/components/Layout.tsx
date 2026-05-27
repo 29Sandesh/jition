@@ -17,7 +17,11 @@ export function Layout() {
     if (!user) return;
 
     // Connect to global socket.io server
-    const socket = io("http://localhost:3000", {
+    const socketUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? window.location.origin
+      : "https://jition.onrender.com";
+
+    const socket = io(socketUrl, {
       withCredentials: true,
       transports: ["websocket"],
     });
@@ -29,6 +33,35 @@ export function Layout() {
     socket.on("activity-notification", (data: any) => {
       // Don't show toast to the user who performed the action
       if (data.userId === user.id) return;
+
+      // Play notification sound
+      try {
+        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-500.wav");
+        audio.volume = 0.4;
+        audio.play().catch(() => {});
+      } catch (e) {
+        console.error("Failed to play notification sound", e);
+      }
+
+      // Save to localStorage
+      try {
+        const stored = localStorage.getItem("jition-notifications");
+        const notifs = stored ? JSON.parse(stored) : [];
+        const newNotif = {
+          id: Date.now().toString(),
+          type: "system",
+          title: `${data.userName} ${data.action} "${data.target}"`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          read: false,
+          icon: data.action.includes("create") || data.action.includes("add") ? "assignment" : "edit",
+          color: data.action.includes("delete") ? "text-red-600" : "text-blue-600",
+          bg: data.action.includes("delete") ? "bg-red-100" : "bg-blue-100"
+        };
+        localStorage.setItem("jition-notifications", JSON.stringify([newNotif, ...notifs].slice(0, 50)));
+        window.dispatchEvent(new Event("jition-new-notification"));
+      } catch (err) {
+        console.error("Failed to store notification", err);
+      }
 
       toast.info(
         `Team Update: ${data.userName} ${data.action} "${data.target}"`,
