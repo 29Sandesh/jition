@@ -1,0 +1,31 @@
+name: Preview Environments
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+jobs:
+  preview:
+    name: Manage Ephemeral Preview Environment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy Preview
+        if: github.event.action != 'closed'
+        run: |
+          echo "Deploying preview environment for PR #${{ github.event.pull_request.number }}..."
+          # This is a placeholder for your actual preview deployment logic.
+          # For example, using Vercel CLI, Netlify CLI, or deploying a dynamic namespace in Kubernetes.
+          # Example for K8s:
+          # kubectl create namespace pr-${{ github.event.pull_request.number }}
+          # kubectl apply -f k8s/ -n pr-${{ github.event.pull_request.number }}
+          echo "Preview deployed!"
+
+      - name: Teardown Preview
+        if: github.event.action == 'closed'
+        run: |
+          echo "Tearing down preview environment for PR #${{ github.event.pull_request.number }}..."
+          # Placeholder for teardown logic
+          # kubectl delete namespace pr-${{ github.event.pull_request.number }}
+          echo "Preview torn down."

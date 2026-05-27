@@ -1,0 +1,42 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.53.1
+    container_name: jition-prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - jition-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: jition-grafana
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3001:3000"
+    networks:
+      - jition-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  jition-network:
+    external: true
+    name: jition_jition-network

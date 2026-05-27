@@ -1,0 +1,46 @@
+# --- Builder Stage ---
+FROM node:20-alpine AS builder
+
+WORKDIR /usr/src/app
+
+COPY package*.json tsconfig.json vite.config.ts ./
+COPY server/ ./server/
+COPY src/ ./src/
+COPY index.html ./
+
+# Install all dependencies including devDependencies to build
+RUN npm ci
+
+# Build frontend and backend server bundle
+RUN npm run build
+
+# --- Production Dependencies Stage ---
+FROM node:20-alpine AS prod-deps
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+# Install only production dependencies
+RUN npm ci --only=production
+
+# --- Runner Stage ---
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Copy build artifacts and production node_modules
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=prod-deps /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/package.json ./package.json
+
+# Expose port
+EXPOSE 3000
+
+# Run as non-root user
+USER node
+
+# Start server
+CMD ["node", "dist/server.cjs"]

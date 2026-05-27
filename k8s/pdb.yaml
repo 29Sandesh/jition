@@ -1,0 +1,21 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: jition-backend-pdb
+  namespace: default
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: jition-backend
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: jition-frontend-pdb
+  namespace: default
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: jition-frontend
