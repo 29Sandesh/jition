@@ -148,7 +148,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <Link
               key={link.to}
               to={link.to}
-              onClick={onClose}
+              onClick={() => {
+                if (isOpen) onClose?.();
+              }}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all",
                 isActive
@@ -184,7 +186,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         
         <Link 
           to="/settings" 
-          onClick={onClose}
+          onClick={() => {
+            if (isOpen) onClose?.();
+          }}
           className="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-on-surface/5 transition-all rounded-xl"
         >
           <span className="material-symbols-outlined text-[20px]">settings</span>
@@ -194,7 +198,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <button 
           onClick={() => {
             setIsHistoryOpen(true);
-            onClose?.();
+            if (isOpen) onClose?.();
           }}
           className="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-on-surface/5 transition-all rounded-xl text-left"
         >
@@ -204,7 +208,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         <Link 
           to="/trash" 
-          onClick={onClose}
+          onClick={() => {
+            if (isOpen) onClose?.();
+          }}
           className="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-on-surface/5 transition-all rounded-xl"
         >
           <span className="material-symbols-outlined text-[20px]">delete</span>
