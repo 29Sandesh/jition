@@ -1,0 +1,264 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-on-tertiary-fixed: #0b1c30;
+  --color-on-primary-fixed: #001849;
+  --color-on-primary-fixed-variant: #003fa4;
+  --color-error-container: #ffdad6;
+  --color-background: #f4f6fa;
+  --color-inverse-on-surface: #eff1f3;
+  --color-on-secondary: #ffffff;
+  --color-on-primary-container: #f8f7ff;
+  --color-surface-container: #eceef0;
+  --color-primary-fixed: #dae1ff;
+  --color-surface-dim: #d8dadc;
+  --color-primary-fixed-dim: #b3c5ff;
+  --color-tertiary-container: #63738a;
+  --color-surface-container-lowest: rgba(255, 255, 255, 0.85);
+  --color-on-secondary-container: #5c647a;
+  --color-inverse-surface: #2d3133;
+  --color-tertiary-fixed: #d3e4fe;
+  --color-on-error: #ffffff;
+  --color-on-secondary-fixed: #131b2e;
+  --color-error: #ff453a; /* iOS-styled red */
+  --color-tertiary: #4b5a70;
+  --color-on-tertiary-fixed-variant: #38485d;
+  --color-secondary: #565e74;
+  --color-primary: #007aff; /* iOS-styled blue */
+  --color-outline-variant: rgba(0, 0, 0, 0.08);
+  --color-surface-container-low: rgba(240, 242, 245, 0.6);
+  --color-on-tertiary-container: #f6f8ff;
+  --color-inverse-primary: #b3c5ff;
+  --color-secondary-fixed: #dae2fd;
+  --color-primary-container: #007aff;
+  --color-on-surface: #1c1c1e;
+  --color-surface-container-highest: #e0e3e5;
+  --color-on-secondary-fixed-variant: #3f465c;
+  --color-outline: #8e8e93;
+  --color-surface: rgba(255, 255, 255, 0.45);
+  --color-surface-variant: #e5e5ea;
+  --color-on-primary: #ffffff;
+  --color-surface-tint: #007aff;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-bright: #f4f6fa;
+  --color-secondary-container: rgba(0, 122, 255, 0.1);
+  --color-on-tertiary: #ffffff;
+  --color-on-surface-variant: #636366;
+  --color-on-error-container: #93000a;
+  --color-secondary-fixed-dim: #bec6e0;
+  --color-tertiary-fixed-dim: #b7c8e1;
+  --color-on-background: #1c1c1e;
+
+  --spacing-gutter: 24px;
+  --spacing-margin-mobile: 16px;
+  --spacing-container-max-width: 1200px;
+  --spacing-sidebar-width: 260px;
+  --spacing-stack-gap-lg: 24px;
+  --spacing-stack-gap-sm: 4px;
+  --spacing-stack-gap-md: 12px;
+  --spacing-base: 8px;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif;
+}
+
+.dark {
+  --color-background: #08090b;
+  --color-on-background: #f2f2f7;
+  --color-surface: rgba(18, 20, 24, 0.45);
+  --color-on-surface: #f2f2f7;
+  --color-surface-container-lowest: rgba(10, 11, 14, 0.65);
+  --color-surface-container-low: rgba(18, 20, 24, 0.5);
+  --color-surface-container: rgba(26, 29, 34, 0.55);
+  --color-surface-container-high: rgba(34, 38, 44, 0.65);
+  --color-surface-container-highest: rgba(42, 47, 54, 0.75);
+  --color-on-surface-variant: #aeaeb2;
+  --color-outline-variant: rgba(255, 255, 255, 0.08);
+  --color-outline: #8e8e93;
+  --color-secondary-container: rgba(10, 132, 255, 0.15);
+  --color-primary: #0a84ff; /* iOS dark-mode blue */
+  --color-primary-container: #0a84ff;
+  color-scheme: dark;
+}
+
+/* Custom Animations for ambient liquid glass blobs */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, -60px) scale(1.15);
+  }
+  66% {
+    transform: translate(-30px, 30px) scale(0.9);
+  }
+}
+
+@keyframes float-reverse-slow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1.1);
+  }
+  50% {
+    transform: translate(-50px, 50px) scale(0.85);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 22s infinite ease-in-out;
+}
+
+.animate-float-reverse {
+  animation: float-reverse-slow 26s infinite ease-in-out;
+}
+
+/* Glassmorphism Utilities */
+@utility glass-panel {
+  background-color: var(--color-surface);
+  backdrop-filter: blur(20px) saturate(195%);
+  -webkit-backdrop-filter: blur(20px) saturate(195%);
+  border: 1px solid var(--color-outline-variant);
+  box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  
+  .dark & {
+    box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.35);
+  }
+}
+
+@utility glass-sidebar {
+  background-color: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(24px) saturate(195%);
+  -webkit-backdrop-filter: blur(24px) saturate(195%);
+  border-right: 1px solid var(--color-outline-variant);
+  
+  .dark & {
+    background-color: rgba(10, 11, 14, 0.55);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
+@utility glass-header {
+  background-color: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(20px) saturate(195%);
+  -webkit-backdrop-filter: blur(20px) saturate(195%);
+  border-bottom: 1px solid var(--color-outline-variant);
+  
+  .dark & {
+    background-color: rgba(10, 11, 14, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
+@utility text-label-sm {
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+@utility text-label-md {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+}
+@utility text-body-md {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+@utility text-body-lg {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+@utility text-headline-md {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+@utility text-headline-lg {
+  font-size: 28px;
+  line-height: 36px;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+@utility text-headline-xl {
+  font-size: 36px;
+  line-height: 44px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+@utility text-title-md {
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+}
+@utility text-title-lg {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 400;
+}
+@utility text-headline-sm {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 400;
+}
+@utility font-headline-sm {
+  font-weight: 500;
+}
+@utility font-headline-xl {
+  font-weight: 800;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-surface-variant);
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-outline);
+}
+
+.timeline-grid {
+  background-image: linear-gradient(to right, var(--color-surface-container) 1px, transparent 1px);
+  background-size: 140px 100%;
+}
+.timeline-row-border {
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+/* Spring-like transition classes */
+.spring-transition {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}

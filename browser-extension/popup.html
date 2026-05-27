@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: system-ui, sans-serif; width: 300px; padding: 16px; margin: 0; background: #f8fafc; }
+    h3 { margin-top: 0; color: #0f172a; }
+    label { display: block; margin-top: 8px; font-size: 12px; font-weight: bold; color: #64748b; }
+    input, textarea, select { width: 100%; box-sizing: border-box; margin-top: 4px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; }
+    button { margin-top: 16px; width: 100%; padding: 10px; background: #0050cb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    #status { margin-top: 8px; font-size: 12px; color: #16a34a; text-align: center; }
+  </style>
+</head>
+<body>
+  <h3>Clip to The CirCle</h3>
+  
+  <label>Task Title</label>
+  <input type="text" id="title" placeholder="Loading..." />
+  
+  <label>Description</label>
+  <textarea id="description" rows="4" placeholder="Highlighted text will appear here..."></textarea>
+  
+  <label>Priority</label>
+  <select id="priority">
+    <option value="P2">P2 - Normal</option>
+    <option value="P1">P1 - High</option>
+    <option value="P0">P0 - Critical</option>
+  </select>
+
+  <label>API URL (Local or Prod)</label>
+  <input type="text" id="apiUrl" value="http://localhost:3000/api/tasks/external" />
+
+  <label>Workspace ID</label>
+  <input type="text" id="workspaceId" placeholder="Workspace ID" />
+
+  <button id="submitBtn">Create Task</button>
+  <div id="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

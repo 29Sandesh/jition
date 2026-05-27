@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jition-backend
+  namespace: default
+  labels:
+    app: jition-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jition-backend
+  template:
+    metadata:
+      labels:
+        app: jition-backend
+    spec:
+      containers:
+      - name: backend
+        image: jition-backend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: MONGODB_URI
+          value: "mongodb://mongo-service:27017/jition"
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        resources:
+          limits:
+            cpu: "500mo"
+            memory: 512Mi
+          requests:
+            cpu: "200mo"
+            memory: 256Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5

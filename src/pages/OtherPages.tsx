@@ -1,0 +1,12 @@
+export { SettingsPage } from "./SettingsPage";
+export { TrashPage } from "./TrashPage";
+export { NotificationsPage } from "./NotificationsPage";
+export { HelpPage } from "./HelpPage";
+export { SharePage } from "./SharePage";
+export { EditDashboardPage } from "./EditDashboardPage";
+export { TimelinePage } from "./TimelinePage";
+export { ActivityPage } from "./ActivityPage";
+export { HistoryPage } from "./HistoryPage";
+export { NewPagePage } from "./NewPagePage";
+export { AuthPage } from "./AuthPage";
+export { OnboardingPage } from "./OnboardingPage";

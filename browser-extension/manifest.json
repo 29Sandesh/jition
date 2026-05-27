@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "The CirCle Web Clipper",
+  "version": "1.0",
+  "description": "Clip web content and create tasks in The CirCle.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Clip to The CirCle"
+  },
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://*.onrender.com/*"
+  ]
+}
