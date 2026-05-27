@@ -271,7 +271,7 @@ workItemsRouter.post("/", requireWorkspaceRole("Editor"), async (req, res) => {
 });
 
 // PUT /api/workItems/:id
-workItemsRouter.put("/:id", requireWorkspaceRole("Editor"), async (req, res) => {
+workItemsRouter.put("/:id", requireWorkspaceRole("Member"), async (req, res) => {
   try {
     const { id } = req.params;
     const workspaceId = (Array.isArray(req.headers["x-workspace-id"]) ? req.headers["x-workspace-id"][0] : req.headers["x-workspace-id"]) as string;
