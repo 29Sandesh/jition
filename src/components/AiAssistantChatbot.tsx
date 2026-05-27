@@ -19,22 +19,22 @@ export function AiAssistantChatbot() {
   useEffect(() => {
     if (user && messages.length === 0) {
       const role = user.role || "Member";
-      let roleDescription = "As a Member, you can create and edit tasks, stories, and epics inside your assigned workspaces.";
+      let roleDescription = "As a Member, you can create and edit tasks, stories, and epics here.";
       
       if (role === "Owner") {
-        roleDescription = "As the Owner, you have complete super-administrative control over all workspaces, projects, billing, and team memberships in The CirCle.";
+        roleDescription = "As Owner, you have full control over workspaces, billing, and team memberships.";
       } else if (role === "Admin" || role === "Auditor") {
-        roleDescription = "As an Admin/Auditor, you can manage workspaces, oversee compliance audit logs, and configure security configurations.";
+        roleDescription = "As Admin/Auditor, you can manage workspaces and audit compliance logs.";
       } else if (role === "Lead") {
-        roleDescription = "As a Lead, you can coordinate sprints, plan timelines, create user stories, and delegate tasks to team members.";
+        roleDescription = "As Lead, you can coordinate sprints, stories, and delegate tasks.";
       } else if (role === "Viewer") {
-        roleDescription = "As a Viewer, you have read-only access to view boards, gantt charts, and dashboard analytics.";
+        roleDescription = "As Viewer, you have read-only access to boards, gantt charts, and dashboard analytics.";
       }
 
       setMessages([
         {
           role: "assistant",
-          content: `Hi **${user.name || "there"}**! I am your **The CirCle AI Co-Pilot**.\n\n${roleDescription}\n\nI am friendly and intelligent! Ask me anything about The CirCle's 6-level architecture or **tell me to assign or create tasks directly**! Just say something like: *'assign a todo task to member eng'* and I will check what details I need, ask you, and create it instantly!`,
+          content: `Hi ${user.name || "there"}! I'm your CirCle AI Co-Pilot. 👋\n\n${roleDescription}\n\nAsk me anything about our 6-level hierarchy, or tell me to assign/create tasks directly. For example: "assign a task to member eng" and I'll get it sorted!`,
         },
       ]);
     }
@@ -133,7 +133,7 @@ export function AiAssistantChatbot() {
           ...prev,
           {
             role: "assistant",
-            content: `✅ **Task Successfully Created & Assigned!**\n\n* **Title/Heading:** ${title}\n* **Description:** ${description || "*No description*"}\n* **Assignee:** ${assigneeEmail || "Unassigned"}\n* **Status:** ${status || "Todo"}\n* **Priority:** ${priority || "P2"}\n\nI have placed this task directly onto your board!`,
+            content: `✅ Task Successfully Created & Assigned!\n\n- Title/Heading: ${title}\n- Description: ${description || "No description"}\n- Assignee: ${assigneeEmail || "Unassigned"}\n- Status: ${status || "Todo"}\n- Priority: ${priority || "P2"}\n\nI have placed this task directly onto your board!`,
           },
         ]);
       } else {
@@ -147,7 +147,7 @@ export function AiAssistantChatbot() {
         ...prev,
         {
           role: "assistant",
-          content: `⚠️ **Failed to execute task command:** ${e.message || e}`,
+          content: `⚠️ Failed to execute task command: ${e.message || e}`,
         },
       ]);
     }
