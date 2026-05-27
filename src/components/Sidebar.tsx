@@ -169,7 +169,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       <div className="mt-auto px-3 space-y-1 border-t border-outline-variant/30 pt-4">
         
         {/* Workspace Done Stats */}
-        <div className="flex gap-1.5 justify-between mb-4 px-1 pb-4 border-b border-outline-variant/30 text-center">
+        <div className="flex gap-1.5 justify-between px-1 text-center">
           <div className="flex-1 bg-on-surface/5 rounded-xl p-1.5">
             <p className="text-[9px] uppercase text-on-surface-variant font-bold">Done</p>
             <p className="text-label-sm font-bold text-success">3</p>
@@ -183,39 +183,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <p className="text-label-sm font-bold text-primary">4</p>
           </div>
         </div>
-        
-        <Link 
-          to="/settings" 
-          onClick={() => {
-            if (isOpen) onClose?.();
-          }}
-          className="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-on-surface/5 transition-all rounded-xl"
-        >
-          <span className="material-symbols-outlined text-[20px]">settings</span>
-          <span className="text-label-md font-bold">Settings</span>
-        </Link>
-
-        <button 
-          onClick={() => {
-            setIsHistoryOpen(true);
-            if (isOpen) onClose?.();
-          }}
-          className="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-on-surface/5 transition-all rounded-xl text-left"
-        >
-          <span className="material-symbols-outlined text-[20px]">history</span>
-          <span className="text-label-md font-bold">History Palette</span>
-        </button>
-
-        <Link 
-          to="/trash" 
-          onClick={() => {
-            if (isOpen) onClose?.();
-          }}
-          className="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-on-surface/5 transition-all rounded-xl"
-        >
-          <span className="material-symbols-outlined text-[20px]">delete</span>
-          <span className="text-label-md font-bold">Trash</span>
-        </Link>
       </div>
 
       <HistoryDrawer isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
