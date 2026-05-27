@@ -7,11 +7,27 @@ import { motion, AnimatePresence } from "motion/react";
 import { io } from "socket.io-client";
 import { useAuth } from "../lib/AuthContext";
 import { AiAssistantChatbot } from "./AiAssistantChatbot";
+import { useStore } from "../lib/store";
+import { initFetchInterceptor, startPrefetching } from "../lib/prefetch";
+import { InteractiveTutorial } from "./InteractiveTutorial";
 
 export function Layout() {
   const location = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const { selectedWsId } = useStore();
+
+  // Initialize dynamic prefetch cache interceptor
+  useEffect(() => {
+    initFetchInterceptor();
+  }, []);
+
+  // Background prefetching on workspace/session change
+  useEffect(() => {
+    if (selectedWsId && user) {
+      startPrefetching(selectedWsId, user.organisationId || "", user.id);
+    }
+  }, [selectedWsId, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -133,6 +149,7 @@ export function Layout() {
       </main>
 
       <AiAssistantChatbot />
+      <InteractiveTutorial />
       <Toaster position="bottom-right" richColors />
     </div>
   );
