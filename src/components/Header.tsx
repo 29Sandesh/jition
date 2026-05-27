@@ -1,7 +1,9 @@
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { useSettings } from "../lib/SettingsContext";
+import { cn } from "../lib/utils";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -11,6 +13,24 @@ export function Header({ onMenuClick }: HeaderProps) {
   const { user, company, logout } = useAuth();
   const { workspaceName } = useSettings();
   const location = useLocation();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsDropdownOpen(false);
+  }, [location]);
 
   // Generate dynamic breadcrumb segments based on path
   const pathSegments = location.pathname.split("/").filter(Boolean);
@@ -101,7 +121,11 @@ export function Header({ onMenuClick }: HeaderProps) {
         <div className="h-6 w-[1px] bg-outline-variant/40 mx-0.5"></div>
 
         {/* User Profile Squirclish Menu */}
-        <div className="flex items-center gap-3 group relative cursor-pointer select-none">
+        <div 
+          ref={dropdownRef}
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center gap-3 relative cursor-pointer select-none"
+        >
           <div className="text-right hidden lg:block">
             <p className="text-label-sm font-bold text-on-surface leading-tight truncate max-w-[120px]">{company?.name || workspaceName}</p>
             <p className="text-[9px] uppercase font-bold tracking-wider text-on-surface-variant leading-none mt-0.5">{user?.role}</p>
@@ -115,11 +139,19 @@ export function Header({ onMenuClick }: HeaderProps) {
             )}
           </div>
 
-          {/* Hover Sign Out Panel */}
-          <div className="absolute top-full right-0 mt-2 w-48 glass-panel rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 overflow-hidden transform translate-y-1 group-hover:translate-y-0 border border-outline-variant">
+          {/* Click Sign Out Panel */}
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "absolute top-full right-0 mt-2 w-48 glass-panel rounded-xl shadow-2xl transition-all duration-200 z-50 overflow-hidden border border-outline-variant",
+              isDropdownOpen 
+                ? "opacity-100 pointer-events-auto transform translate-y-0" 
+                : "opacity-0 pointer-events-none transform translate-y-1"
+            )}
+          >
              <div className="px-4 py-2 bg-on-surface/5 border-b border-outline-variant/30">
-               <p className="text-[10px] uppercase font-bold text-on-surface-variant">Active Session</p>
-               <p className="text-label-sm font-bold text-on-surface truncate">{user?.name || user?.email}</p>
+                <p className="text-[10px] uppercase font-bold text-on-surface-variant">Active Session</p>
+                <p className="text-label-sm font-bold text-on-surface truncate">{user?.name || user?.email}</p>
              </div>
              
              <Link 
