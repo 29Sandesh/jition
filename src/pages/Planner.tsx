@@ -69,6 +69,7 @@ export function Planner() {
 
           return {
             ...t,
+            id: t._id || t.id,
             startDate,
             endDate,
             description: t.description || "No description provided. Click to add context, sub-tasks, or notes for this item.",
@@ -135,16 +136,34 @@ export function Planner() {
         "Content-Type": "application/json"
       };
 
-      const payload: any = { ...updates };
-      if (updates.labels !== undefined) {
-        payload.tags = updates.labels;
-        delete payload.labels;
+      const isNew = typeof updated.id === "string" && updated.id.startsWith("new-");
+      const url = isNew ? "/api/workItems" : `/api/workItems/${updated.id}`;
+      const method = isNew ? "POST" : "PUT";
+
+      let body: any;
+      if (isNew) {
+        body = {
+          title: updated.title || "New Draft Task",
+          status: updated.status || "Todo",
+          priority: updated.priority || "P2",
+          description: updated.description || "",
+          assigneeIds: updated.assigneeIds || [],
+          dueDate: updated.dueDate || new Date().toISOString(),
+          estimate: updated.estimate || 1,
+          tags: updated.labels || []
+        };
+      } else {
+        body = { ...updates };
+        if (updates.labels !== undefined) {
+          body.tags = updates.labels;
+          delete body.labels;
+        }
       }
 
-      const res = await fetch(`/api/workItems/${updated.id}`, {
-        method: "PUT",
+      const res = await fetch(url, {
+        method,
         headers: authHeaders,
-        body: JSON.stringify(payload)
+        body: JSON.stringify(body)
       });
       
       if (!res.ok) {
@@ -152,6 +171,17 @@ export function Planner() {
           toast.error("You don't have permission to update tasks.");
         } else {
           toast.error("Failed to save changes.");
+        }
+      } else {
+        const data = await res.json();
+        if (isNew && data.item) {
+          const savedItem = {
+            ...updated,
+            id: data.item._id || data.item.id,
+            _id: data.item._id
+          };
+          setTasks(prev => prev.map(t => t.id === updated.id ? savedItem : t));
+          setActiveTask(savedItem);
         }
       }
     } catch (err) {
