@@ -12,8 +12,6 @@ passport.use(
         ? process.env.GOOGLE_CLIENT_SECRET 
         : "placeholder-client-secret",
       callbackURL: "/api/auth/google/callback",
-      pkce: true,
-      state: true,
       proxy: true, // Respect reverse proxies to resolve redirect_uri as https
     },
     async (accessToken, refreshToken, profile, done) => {
