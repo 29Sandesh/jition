@@ -387,7 +387,10 @@ export function SettingsPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-[1400px] mx-auto w-full relative mt-4">
-      <div className="flex gap-8 items-start">
+      {/* Ambient background glow for premium feel */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/10 blur-[120px] rounded-full pointer-events-none -z-10" />
+      
+      <div className="flex gap-8 items-start relative z-10">
         <div className="w-64 shrink-0 sticky top-8">
           <nav className="flex flex-col gap-2">
             {tabs.map(tab => (
@@ -395,25 +398,28 @@ export function SettingsPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left relative overflow-hidden group",
-                  activeTab === tab.id ? "text-primary font-bold" : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                  "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all text-left relative overflow-hidden group mb-1",
+                  activeTab === tab.id ? "text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface hover:translate-x-1 duration-300"
                 )}
               >
                 {activeTab === tab.id && (
                   <motion.div 
                     layoutId="activeTabBackground"
-                    className="absolute inset-0 bg-primary/10 rounded-xl"
+                    className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/5 rounded-2xl border border-primary/20"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
-                <span className={cn("material-symbols-outlined text-[20px] relative z-10", activeTab === tab.id ? "text-primary" : "")}>{tab.icon}</span>
+                <span className={cn(
+                  "material-symbols-outlined text-[20px] relative z-10 transition-transform group-hover:scale-110 duration-300", 
+                  activeTab === tab.id ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" : ""
+                )}>{tab.icon}</span>
                 <span className="text-label-md relative z-10">{tab.label}</span>
               </button>
             ))}
           </nav>
         </div>
         
-        <div className="flex-1 glass-panel rounded-2xl p-8 overflow-hidden relative min-h-[500px]">
+        <div className="flex-1 bg-surface-container-lowest/60 backdrop-blur-3xl rounded-3xl p-8 overflow-hidden relative min-h-[500px] border border-outline-variant/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] ring-1 ring-white/5">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -443,7 +449,7 @@ export function SettingsPage() {
                         />
                         <div 
                           onClick={() => avatarInputRef.current?.click()}
-                          className="w-24 h-24 rounded-full bg-primary flex flex-col items-center justify-center text-white font-headline-xl shadow-md cursor-pointer overflow-hidden border-4 border-surface"
+                          className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 flex flex-col items-center justify-center text-white font-headline-xl shadow-[0_8px_24px_rgba(var(--primary),0.3)] cursor-pointer overflow-hidden border-4 border-surface ring-2 ring-primary/20 transition-transform hover:scale-105 duration-300 group-hover:shadow-[0_12px_32px_rgba(var(--primary),0.5)]"
                         >
                           {draftAvatar ? (
                             <img src={draftAvatar} alt="Avatar" className="w-full h-full object-cover" />
@@ -558,10 +564,10 @@ export function SettingsPage() {
                   </div>
 
                   {/* Sticky Save Button */}
-                  <div className="sticky bottom-4 pt-4 mt-8 flex items-center justify-between gap-4 bg-surface/85 backdrop-blur-md z-10 border-t border-transparent px-4">
+                  <div className="sticky bottom-4 pt-4 mt-8 flex items-center justify-between gap-4 bg-surface-container-lowest/80 backdrop-blur-2xl z-10 border border-outline-variant/60 rounded-2xl px-6 py-4 shadow-xl ring-1 ring-white/10">
                     <div className="flex items-center">
-                      <button className="flex items-center gap-2 text-error font-bold text-label-md hover:underline">
-                        <span className="material-symbols-outlined text-[18px]">delete_forever</span>
+                      <button className="flex items-center gap-2 text-error font-bold text-label-md hover:underline group">
+                        <span className="material-symbols-outlined text-[18px] group-hover:animate-pulse">delete_forever</span>
                         Delete Account
                       </button>
                     </div>
@@ -569,13 +575,13 @@ export function SettingsPage() {
                     <div className="flex items-center gap-4">
                       <button 
                         onClick={() => logout()}
-                        className="px-6 py-2.5 rounded-lg font-bold text-label-md border border-error text-error hover:bg-error/10 transition-colors shadow-sm"
+                        className="px-6 py-2.5 rounded-xl font-bold text-label-md border border-error/50 text-error hover:bg-error/10 hover:border-error transition-all shadow-sm"
                       >
                         Sign Out
                       </button>
                       <button 
                         onClick={handleSaveGeneral}
-                        className="px-6 py-2.5 rounded-lg font-bold text-label-md bg-primary text-white hover:opacity-90 transition-opacity shadow-md"
+                        className="px-8 py-2.5 rounded-xl font-bold text-label-md bg-gradient-to-r from-primary to-primary/80 text-white hover:opacity-90 hover:shadow-[0_0_20px_rgba(var(--primary),0.4)] transition-all shadow-md transform hover:-translate-y-0.5"
                       >
                         Save All Changes
                       </button>
@@ -617,7 +623,11 @@ export function SettingsPage() {
                                   headers: { "Content-Type": "application/json", "x-user-id": user?.id || "" },
                                   body: JSON.stringify({ currentPassword: pwdCurrent, newPassword: pwdNew })
                                 });
-                                const data = await res.json();
+                                
+                                const contentType = res.headers.get("content-type");
+                                const isJson = contentType && contentType.includes("application/json");
+                                const data = isJson ? await res.json() : null;
+                                
                                 if (res.ok) {
                                   setShowPasswordModal(false); 
                                   toast.success("Password updated successfully"); 
@@ -625,10 +635,10 @@ export function SettingsPage() {
                                   setPwdNew(""); 
                                   setPwdConfirm(""); 
                                 } else {
-                                  toast.error(data.error || "Failed to update password");
+                                  toast.error(data?.error || data?.message || "Incorrect current password or server error");
                                 }
                               } catch(e) {
-                                toast.error("An error occurred");
+                                toast.error("Network or server error occurred");
                               }
                             }} 
                             className="px-4 py-2 rounded-lg font-bold text-label-md bg-primary text-white hover:opacity-90 transition-colors"

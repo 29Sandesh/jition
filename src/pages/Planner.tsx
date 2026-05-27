@@ -120,11 +120,43 @@ export function Planner() {
     setActiveTask(newTask);
   };
 
-  const updateActiveTask = (updates: Partial<Task>) => {
+  const updateActiveTask = async (updates: Partial<Task>) => {
     if (!activeTask) return;
     const updated = { ...activeTask, ...updates };
     setActiveTask(updated);
     setTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
+
+    try {
+      const authHeaders = {
+        "x-workspace-id": "default-workspace-id",
+        "x-organisation-id": organisation?.id || user?.organisationId || "",
+        "x-user-id": user?.id || "",
+        "x-company-id": organisation?.id || user?.organisationId || "",
+        "Content-Type": "application/json"
+      };
+
+      const payload: any = { ...updates };
+      if (updates.labels !== undefined) {
+        payload.tags = updates.labels;
+        delete payload.labels;
+      }
+
+      const res = await fetch(`/api/workItems/${updated.id}`, {
+        method: "PUT",
+        headers: authHeaders,
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) {
+        if (res.status === 403) {
+          toast.error("You don't have permission to update tasks.");
+        } else {
+          toast.error("Failed to save changes.");
+        }
+      }
+    } catch (err) {
+      toast.error("Error saving task.");
+    }
   };
 
   const groups = useMemo(() => {

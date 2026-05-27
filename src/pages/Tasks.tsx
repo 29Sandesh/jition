@@ -63,7 +63,7 @@ export function Tasks() {
   const [selectedStoryId, setSelectedStoryId] = useState("");
 
   const [wsRole, setWsRole] = useState("Viewer");
-  const canEditWorkspace = ["Owner", "Admin", "Editor"].includes(wsRole) || user?.role === "Owner";
+  const canEditWorkspace = ["Owner", "Admin", "Editor", "Member"].includes(wsRole) || user?.role === "Owner";
   const [view, setView] = useState<"list" | "grid">("grid");
 
   const [aiSummary, setAiSummary] = useState<string>("");

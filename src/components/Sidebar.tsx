@@ -182,16 +182,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
         </div>
         
-        {["Owner", "Admin", "Lead"].includes(user?.role || "") && (
-          <Link 
-            to="/settings" 
-            onClick={onClose}
-            className="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-on-surface/5 transition-all rounded-xl"
-          >
-            <span className="material-symbols-outlined text-[20px]">settings</span>
-            <span className="text-label-md font-bold">Settings</span>
-          </Link>
-        )}
+        <Link 
+          to="/settings" 
+          onClick={onClose}
+          className="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-on-surface/5 transition-all rounded-xl"
+        >
+          <span className="material-symbols-outlined text-[20px]">settings</span>
+          <span className="text-label-md font-bold">Settings</span>
+        </Link>
 
         <button 
           onClick={() => {
