@@ -199,7 +199,7 @@ export function Dashboard() {
                         <tr><td colSpan={4} className="p-8 text-center text-outline font-medium">No urgent tasks. You're all clear!</td></tr>
                      ) : urgentTasks.map(task => (
                         <tr key={task.id} className="border-b border-outline-variant/30 hover:bg-error/5 transition-colors group">
-                           <td className="p-4 text-label-md text-on-surface-variant font-bold">{task.id}</td>
+                           <td className="p-4 text-label-md text-on-surface-variant font-bold">{(task.id || "").substring(Math.max(0, (task.id || "").length - 6))}</td>
                            <td className="p-4 text-body-md font-semibold text-on-surface group-hover:text-error transition-colors">{task.title}</td>
                            <td className="p-4 text-label-md text-error font-bold">{task.dueDate}</td>
                            <td className="p-4 text-right">
