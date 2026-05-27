@@ -32,6 +32,27 @@ export function Header({ onMenuClick }: HeaderProps) {
     setIsDropdownOpen(false);
   }, [location]);
 
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const updateUnreadCount = () => {
+      try {
+        const stored = localStorage.getItem("jition-notifications");
+        const notifs = stored ? JSON.parse(stored) : [];
+        const unread = notifs.filter((n: any) => !n.read).length;
+        setUnreadCount(unread);
+      } catch (e) {
+        console.error("Failed to parse notifications in header", e);
+      }
+    };
+
+    updateUnreadCount();
+    window.addEventListener("jition-new-notification", updateUnreadCount);
+    return () => {
+      window.removeEventListener("jition-new-notification", updateUnreadCount);
+    };
+  }, []);
+
   // Generate dynamic breadcrumb segments based on path
   const pathSegments = location.pathname.split("/").filter(Boolean);
   const getPageTitle = (segment: string) => {
@@ -104,10 +125,13 @@ export function Header({ onMenuClick }: HeaderProps) {
 
         <Link 
           to="/notifications" 
-          className="p-2 text-on-surface-variant hover:bg-on-surface/5 transition-colors rounded-full flex items-center justify-center"
+          className="p-2 text-on-surface-variant hover:bg-on-surface/5 transition-colors rounded-full flex items-center justify-center relative"
           title="Notifications"
         >
           <span className="material-symbols-outlined">notifications</span>
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full ring-2 ring-white animate-pulse" />
+          )}
         </Link>
         
         <Link 

@@ -92,7 +92,11 @@ export function Tasks() {
   useEffect(() => {
     if (!selectedWsId) return;
 
-    const socket = io("http://localhost:3000", {
+    const socketUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? window.location.origin
+      : "https://jition.onrender.com";
+
+    const socket = io(socketUrl, {
       withCredentials: true,
       transports: ["websocket"],
     });
