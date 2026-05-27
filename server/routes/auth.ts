@@ -202,13 +202,25 @@ authRouter.get("/github/callback", passport.authenticate("github", { session: fa
 // Update User Profile
 authRouter.put("/profile", requireAuth, async (req, res) => {
   try {
+    console.log("[DEBUG] PUT /profile request received");
+    console.log("[DEBUG] Body:", JSON.stringify(req.body));
+    console.log("[DEBUG] User:", req.user);
+    console.log("[DEBUG] Cookies:", JSON.stringify(req.cookies));
+    console.log("[DEBUG] Authorization Header:", req.headers.authorization);
+
     const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: "Missing authentication" });
+    if (!userId) {
+      console.log("[DEBUG] No userId found in req.user");
+      return res.status(401).json({ error: "Missing authentication" });
+    }
 
     const { name, avatar, jobTitle, bio } = req.body;
     
     const user = await UserModel.findById(userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      console.log("[DEBUG] User not found in database for id:", userId);
+      return res.status(404).json({ error: "User not found" });
+    }
 
     if (name !== undefined) user.name = name;
     if (avatar !== undefined) (user as any).avatar = avatar;
@@ -216,6 +228,7 @@ authRouter.put("/profile", requireAuth, async (req, res) => {
     if (bio !== undefined) (user as any).bio = bio;
 
     await user.save();
+    console.log("[DEBUG] User document saved successfully for id:", userId);
 
     await writeAuditLog(
       userId,
@@ -230,9 +243,9 @@ authRouter.put("/profile", requireAuth, async (req, res) => {
       success: true,
       user: { ...userObj, id: user._id.toString(), companyId: user.organisationId?.toString() || null }
     });
-  } catch (error) {
-    console.error("Profile update error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+  } catch (error: any) {
+    console.error("[DEBUG] Profile update error:", error.stack || error);
+    res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 });
 
